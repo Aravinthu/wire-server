@@ -4,9 +4,14 @@ module Main where
 
 import Cassandra.Schema
 import Control.Exception (finally)
+import Data.Maybe (fromMaybe)
 import Data.Monoid
+import Data.Yaml (decodeFileEither, ParseException)
 import Options.Applicative
 import System.Logger hiding (info)
+import System.Directory
+import System.Environment (getArgs)
+import System.IO (hPutStrLn, stderr)
 
 import qualified V9
 import qualified V10
@@ -42,9 +47,43 @@ import qualified V41
 import qualified V42
 import qualified V43
 
+getOptions :: IO MigrationOpts
+getOptions = do
+    path <- parseConfigPath
+    file <- doesFileExist path
+    if file then do
+      configFile <- decodeConfigFile path
+      case configFile of
+        Left e -> fail $ show e
+        Right opts -> return opts
+    else do
+      hPutStrLn stderr $ "Config file at " ++ path ++ " does not exist, falling back to command-line arguments. \n"
+      execParser (info (helper <*> migrationOptsParser) desc)
+
+decodeConfigFile :: FilePath -> IO (Either ParseException MigrationOpts)
+decodeConfigFile = decodeFileEither
+
+parseConfigPath :: IO String
+parseConfigPath = do
+  args <- getArgs
+  let result = getParseResult $ execParserPure defaultPrefs (info (helper <*> pathParser) desc) args
+  pure $ fromMaybe defaultPath result
+  where
+    defaultPath = "/etc/wire/brig/brig-schema.yaml"
+    pathParser :: Parser String
+    pathParser = strOption $
+                 long "config-file"
+                 <> short 'c'
+                 <> help "Config file to load"
+                 <> showDefault
+                 <> value defaultPath
+
+desc :: InfoMod a
+desc = header "Brig Cassandra Schema Migrations" <> fullDesc
+
 main :: IO ()
 main = do
-    o <- execParser (info (helper <*> migrationOptsParser) desc)
+    o <- getOptions
     l <- new $ setOutput StdOut . setFormat Nothing $ defSettings
     migrateSchema l o
         [ V9.migration
@@ -81,5 +120,3 @@ main = do
         , V42.migration
         , V43.migration
         ] `finally` close l
-  where
-    desc = header "Brig Cassandra Schema Migrations" <> fullDesc

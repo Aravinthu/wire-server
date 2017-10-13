@@ -249,6 +249,7 @@ executable brig-schema
     build-depends:
         base
       , cassandra-util       >= 0.12
+      , directory            >= 1.3
       , optparse-applicative >= 0.10
       , raw-strings-qq       >= 1.0
       , text
