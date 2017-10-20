@@ -575,7 +575,7 @@ toNexmoEndpoint = readerAsk >>= \s -> case s of
 requestUrl :: ReadM Request
 requestUrl = readerAsk >>= maybe (fail "Invalid request URL") pure . parseRequest
 
-optOrEnv :: (a -> b) -> (Either c a) -> (String -> b) -> String -> IO b
+optOrEnv :: (a -> b) -> (Maybe a) -> (String -> b) -> String -> IO b
 optOrEnv getter conf reader var = case conf of
-  Left _ -> reader <$> getEnv var
-  Right c -> pure $ getter c
+  Nothing -> reader <$> getEnv var
+  Just c -> pure $ getter c

@@ -50,7 +50,7 @@ instance FromJSON Config
 decodeConfigFile :: (FromJSON c) => FilePath -> IO (Either ParseException c)
 decodeConfigFile = decodeFileEither
 
-runTests :: Either ParseException Config -> Either ParseException Opts.Opts -> IO ()
+runTests :: Maybe Config -> Maybe Opts.Opts -> IO ()
 runTests iConf bConf = do
     let local p = Endpoint { epHost = "127.0.0.1", epPort = p }
     brig      <- mkRequest <$> Opts.optOrEnv confBrig iConf (local . read) "BRIG_WEB_PORT"
@@ -83,8 +83,8 @@ runTests iConf bConf = do
 main :: IO ()
 main = withOpenSSL $ do
   (iPath, bPath) <- parseConfigPaths
-  iConf <- decodeConfigFile iPath
-  bConf <- decodeConfigFile bPath
+  iConf <- handleParseError $ decodeConfigFile iPath
+  bConf <- handleParseError $ decodeConfigFile bPath
 
   runTests iConf bConf
 
@@ -97,6 +97,12 @@ initCassandra ep lg =
 
 mkRequest :: Endpoint -> Request -> Request
 mkRequest (Endpoint h p) = host (B.pack h) . port p
+
+handleParseError :: (Show a) => Either a b -> IO (Maybe b)
+handleParseError (Left err) = do
+  putStrLn "Parse failed: " ++ show a ++ "\nFalling back to environment variables"
+  pure Nothing
+handleParseError (Right val) = pure $ Just val
 
 parseConfigPaths :: IO (String, String)
 parseConfigPaths = do

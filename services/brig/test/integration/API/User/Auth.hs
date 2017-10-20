@@ -41,7 +41,7 @@ import qualified Data.UUID.V4         as UUID
 
 import qualified Network.Wai.Utilities.Error as Error
 
-tests :: Either a Opts.Opts -> Manager -> Logger -> Brig -> IO TestTree
+tests :: Maybe Opts.Opts -> Manager -> Logger -> Brig -> IO TestTree
 tests conf m _ b = do
     z <- mkZAuthEnv conf
     return $ testGroup "auth"
@@ -77,7 +77,7 @@ tests conf m _ b = do
 --------------------------------------------------------------------------------
 -- ZAuth test environment for generating arbitrary tokens.
 
-mkZAuthEnv :: Either a Opts.Opts -> IO ZAuth.Env
+mkZAuthEnv :: Maybe Opts.Opts -> IO ZAuth.Env
 mkZAuthEnv config = do
     Just (sk :| sks) <- join $ Opts.optOrEnv (ZAuth.readKeys . Opts.privateKeys . Opts.zauth) config ZAuth.readKeys "ZAUTH_PRIVKEYS"
     Just (pk :| pks) <- join $ Opts.optOrEnv (ZAuth.readKeys . Opts.privateKeys . Opts.zauth) config ZAuth.readKeys "ZAUTH_PUBKEYS"
@@ -231,7 +231,7 @@ testLoginFailure brig = do
                 const 403                          === statusCode
                 const (Just "invalid-credentials") === fmap Error.label . decodeBody
 
-testThrottleLogins :: Either a Opts.Opts -> Brig -> Http ()
+testThrottleLogins :: Maybe Opts.Opts -> Brig -> Http ()
 testThrottleLogins conf b = do
     l <- liftIO $ Opts.optOrEnv (Opts.setUserCookieLimit . Opts.optSettings) conf read "USER_COOKIE_LIMIT"
     u <- randomUser b
@@ -300,7 +300,7 @@ testUnknownCookie z r = do
         const 403 === statusCode
         const (Just "invalid-credentials") =~= responseBody
 
-testNewPersistentCookie :: Either a Opts.Opts -> Brig -> Http ()
+testNewPersistentCookie :: Maybe Opts.Opts -> Brig -> Http ()
 testNewPersistentCookie config b = do
     u <- randomUser b
     renewAge <- liftIO $ Opts.optOrEnv (Opts.setUserCookieRenewAge . Opts.optSettings) config read "USER_COOKIE_RENEW_AGE"
@@ -352,7 +352,7 @@ testNewPersistentCookie config b = do
         [PersistentCookie] @=? map cookieType _cs
         [Nothing] @=? map cookieSucc _cs
 
-testNewSessionCookie :: Either a Opts.Opts -> Brig -> Http ()
+testNewSessionCookie :: Maybe Opts.Opts -> Brig -> Http ()
 testNewSessionCookie config b = do
     u <- randomUser b
     renewAge <- liftIO $ Opts.optOrEnv (Opts.setUserCookieRenewAge . Opts.optSettings) config read "USER_COOKIE_RENEW_AGE"
@@ -434,7 +434,7 @@ testRemoveCookiesByLabelAndId b = do
     let lbl = cookieLabel c4
     listCookies b (userId u) >>= liftIO . ([lbl] @=?) . map cookieLabel
 
-testTooManyCookies :: Either a Opts.Opts -> Brig -> Http ()
+testTooManyCookies :: Maybe Opts.Opts -> Brig -> Http ()
 testTooManyCookies config b = do
     u <- randomUser b
     l <- liftIO $ Opts.optOrEnv (Opts.setUserCookieLimit . Opts.optSettings) config read "USER_COOKIE_LIMIT"
