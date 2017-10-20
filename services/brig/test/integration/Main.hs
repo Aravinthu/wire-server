@@ -6,6 +6,7 @@ module Main (main) where
 import Bilge (newManager, host, port, Request)
 import Cassandra as Cql
 import Cassandra.Settings as Cql
+import Control.Monad (join)
 import Data.Aeson
 import Data.Maybe (fromMaybe)
 import Data.Monoid
@@ -83,8 +84,8 @@ runTests iConf bConf = do
 main :: IO ()
 main = withOpenSSL $ do
   (iPath, bPath) <- parseConfigPaths
-  iConf <- handleParseError $ decodeConfigFile iPath
-  bConf <- handleParseError $ decodeConfigFile bPath
+  iConf <- join $ handleParseError <$> decodeConfigFile iPath
+  bConf <- join $ handleParseError <$> decodeConfigFile bPath
 
   runTests iConf bConf
 
@@ -100,7 +101,7 @@ mkRequest (Endpoint h p) = host (B.pack h) . port p
 
 handleParseError :: (Show a) => Either a b -> IO (Maybe b)
 handleParseError (Left err) = do
-  putStrLn "Parse failed: " ++ show a ++ "\nFalling back to environment variables"
+  putStrLn $ "Parse failed: " ++ show err ++ "\nFalling back to environment variables"
   pure Nothing
 handleParseError (Right val) = pure $ Just val
 
