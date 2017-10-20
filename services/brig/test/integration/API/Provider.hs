@@ -40,7 +40,6 @@ import Galley.Types.Bot (ServiceRef, newServiceRef, serviceRefId, serviceRefProv
 import GHC.Generics hiding (to, from)
 import Gundeck.Types.Notification
 import Network.HTTP.Types.Status (status200, status201, status400)
-import Network.Socket (close)
 import Network.Wai (Application, responseLBS, strictRequestBody)
 import OpenSSL.PEM (writePublicKey)
 import OpenSSL.RSA (generateRSAKey')
@@ -50,29 +49,31 @@ import Text.Printf (printf)
 import Web.Cookie (SetCookie (..), parseSetCookie)
 import Util
 
-import qualified Brig.Code                    as Code
-import qualified Brig.Types.Provider.External as Ext
-import qualified Cassandra                    as DB
-import qualified Control.Concurrent.Async     as Async
-import qualified Data.ByteString              as BS
-import qualified Data.ByteString.Char8        as C8
-import qualified Data.ByteString.Lazy.Char8   as LC8
-import qualified Data.HashMap.Strict          as HashMap
-import qualified Data.List1                   as List1
-import qualified Data.Set                     as Set
-import qualified Data.Text.Ascii              as Ascii
-import qualified Data.Text.Encoding           as Text
-import qualified Data.UUID                    as UUID
-import qualified Data.ZAuth.Token             as ZAuth
-import qualified Network.Wai.Handler.Warp     as Warp
-import qualified Network.Wai.Handler.WarpTLS  as Warp
-import qualified Network.Wai.Route            as Wai
-import qualified Test.Tasty.Cannon            as WS
+import qualified Brig.Code                         as Code
+import qualified Brig.Types.Provider.External      as Ext
+import qualified Cassandra                         as DB
+import qualified Control.Concurrent.Async          as Async
+import qualified Data.ByteString                   as BS
+import qualified Data.ByteString.Char8             as C8
+import qualified Data.ByteString.Lazy.Char8        as LC8
+import qualified Data.HashMap.Strict               as HashMap
+import qualified Data.List1                        as List1
+import qualified Data.Set                          as Set
+import qualified Data.Text.Ascii                   as Ascii
+import qualified Data.Text.Encoding                as Text
+import qualified Data.UUID                         as UUID
+import qualified Data.ZAuth.Token                  as ZAuth
+import qualified Network.Wai.Handler.Warp          as Warp
+import qualified Network.Wai.Handler.WarpTLS       as Warp
+import qualified Network.Wai.Handler.Warp.Internal as Warp
+import qualified Network.Wai.Route                 as Wai
+import qualified Test.Tasty.Cannon                 as WS
 
 data Config = Config
     { privateKey   :: FilePath
     , publicKey    :: FilePath
     , cert         :: FilePath
+    , botPort      :: Int
     } deriving (Show, Generic)
 
 instance FromJSON Config
@@ -962,30 +963,28 @@ withTestService
     -> (Chan e -> Application)
     -> (ServiceRef -> Chan e -> Http a)
     -> Http a
-withTestService config crt db brig mkApp go = bracket
-    (liftIO Warp.openFreePort)
-    (liftIO . close . snd)
-    (\(_port, sock) -> do
-        sref <- registerService _port
-        runService sref sock)
+withTestService config crt db brig mkApp go = do
+    sref <- registerService
+    runService sref
   where
-    registerService sport = do
+    p = either (const 9000) botPort config
+    registerService = do
         prv <- randomProvider db brig
         new <- defNewService config
-        let Just url = fromByteString ("https://localhost:" <> C8.pack (show sport))
+        let Just url = fromByteString $ "https://brig-integration:" <> (C8.pack . show $ p)
         svc <- addGetService brig (providerId prv) (new { newServiceUrl = url })
         let pid = providerId prv
         let sid = serviceId svc
         enableService brig pid sid
         return (newServiceRef sid pid)
 
-    runService sref sock = do
+    runService sref = do
         key <- liftIO $ optOrEnv privateKey config id "TEST_KEY"
         let tlss = Warp.tlsSettings crt key
-        let defs = Warp.defaultSettings
+        let defs = Warp.defaultSettings { Warp.settingsPort = p }
         buf <- liftIO newChan
         srv <- liftIO . Async.async $
-            Warp.runTLSSocket tlss defs sock $
+            Warp.runTLS tlss defs $
                 mkApp buf
         go sref buf `finally` liftIO (Async.cancel srv)
 

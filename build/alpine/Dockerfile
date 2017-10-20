@@ -19,7 +19,8 @@ ARG service
 ARG executable
 COPY --from=builder /src/wire-server/services/${service}/dist/${executable} /usr/bin/${exectuable}
 
-COPY /etc/wire/ /etc/wire/
+COPY --from=builder /src/wire-server/conf/ /etc/wire/brig/
+COPY --from=builder /src/wire-server/services/brig/deb/opt/brig/templates/ /usr/share/wire/templates/
 
 # ARGs are not available at runtime, create symlink at build time
 # more info: https://stackoverflow.com/questions/40902445/using-variable-interpolation-in-string-in-docker

@@ -291,10 +291,8 @@ executable brig-integration
     main-is:            Main.hs
     hs-source-dirs:     test/integration
     ghc-options:
-        -threaded
         -Wall
         -fwarn-tabs
-        -with-rtsopts=-N
 
     other-modules:
         API
