@@ -243,10 +243,10 @@ initAws o l m = do
     let a = Opt.aws o
     e <- Aws.newEnv l m (liftM2 (,) (Opt.awsKeyId a) (Opt.awsSecretKey a))
     let c = Aws.config (Aws.Account (Opt.account a))
-                       (Aws.SesQueue (Opt.ses_queue a))
-                       (Aws.InternalQueue (Opt.internal_queue a))
-                       (Aws.BlacklistTable (Opt.blacklist_table a))
-                       (Aws.PreKeyTable (Opt.prekey_table a))
+                       (Aws.SesQueue (Opt.sesQueue a))
+                       (Aws.InternalQueue (Opt.internalQueue a))
+                       (Aws.BlacklistTable (Opt.blacklistTable a))
+                       (Aws.PreKeyTable (Opt.prekeyTable a))
     return (e, c)
 
 initZAuth :: Opts -> IO ZAuth.Env

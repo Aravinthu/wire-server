@@ -4,7 +4,6 @@
 {-# LANGUAGE MultiParamTypeClasses      #-}
 {-# LANGUAGE OverloadedStrings          #-}
 
-
 module Brig.Options where
 
 import Brig.Types
@@ -46,93 +45,93 @@ instance Read ActivationTimeout where
         _         -> []
 
 data Endpoint = Endpoint
-    { host :: Text
-    , port :: Word16
+    { host :: !Text
+    , port :: !Word16
     } deriving (Show, Generic)
 
 instance FromJSON Endpoint
 
 data CassandraOpts = CassandraOpts
-    { endpoint :: Endpoint
-    , keyspace :: Text
+    { endpoint :: !Endpoint
+    , keyspace :: !Text
     } deriving (Show, Generic)
 
 instance FromJSON CassandraOpts
 
 data ElasticSearchOpts = ElasticSearchOpts
-    { url   :: Text
-    , index :: Text
+    { url   :: !Text
+    , index :: !Text
     } deriving (Show, Generic)
 
 instance FromJSON ElasticSearchOpts
 
 data AWSOpts = AWSOpts
-    { account         :: Text
-    , ses_queue       :: Text
-    , internal_queue  :: Text
-    , blacklist_table :: Text
-    , prekey_table    :: Text
-    , awsKeyId        :: (Maybe Aws.AccessKeyId)
-    , awsSecretKey    :: (Maybe Aws.SecretAccessKey)
+    { account         :: !Text
+    , sesQueue        :: !Text
+    , internalQueue   :: !Text
+    , blacklistTable  :: !Text
+    , prekeyTable     :: !Text
+    , awsKeyId        :: !(Maybe Aws.AccessKeyId)
+    , awsSecretKey    :: !(Maybe Aws.SecretAccessKey)
     } deriving (Show, Generic)
 
 instance FromJSON AWSOpts
 
 data EmailSMSGeneralOpts = EmailSMSGeneralOpts
-    { templateDir :: FilePath
-    , emailSender :: Email
-    , smsSender   :: Text
+    { templateDir :: !FilePath
+    , emailSender :: !Email
+    , smsSender   :: !Text
     } deriving (Show, Generic)
 
 instance FromJSON EmailSMSGeneralOpts
 
 data EmailUserOpts = EmailUserOpts
-    { activationUrl     :: Text
-    , smsActivationUrl  :: Text
-    , passwordResetUrl  :: Text
-    , invitationUrl     :: Text
-    , deletionUrl       :: Text
+    { activationUrl     :: !Text
+    , smsActivationUrl  :: !Text
+    , passwordResetUrl  :: !Text
+    , invitationUrl     :: !Text
+    , deletionUrl       :: !Text
     } deriving (Show, Generic)
 
 instance FromJSON EmailUserOpts
 
 data ProviderOpts = ProviderOpts
-    { homeUrl               :: Text
-    , providerActivationUrl :: Text
-    , approvalUrl           :: Text
-    , approvalTo            :: Email
+    { homeUrl               :: !Text
+    , providerActivationUrl :: !Text
+    , approvalUrl           :: !Text
+    , approvalTo            :: !Email
     } deriving (Show, Generic)
 
 instance FromJSON ProviderOpts
 
 data TeamOpts = TeamOpts
-    { tInvitationUrl :: Text
-    , tActivationUrl :: Text
+    { tInvitationUrl :: !Text
+    , tActivationUrl :: !Text
     } deriving (Show, Generic)
 
 instance FromJSON TeamOpts
 
 data EmailSMSOpts = EmailSMSOpts
-    { general  :: EmailSMSGeneralOpts
-    , user     :: EmailUserOpts
-    , provider :: ProviderOpts
-    , team     :: TeamOpts
+    { general  :: !EmailSMSGeneralOpts
+    , user     :: !EmailUserOpts
+    , provider :: !ProviderOpts
+    , team     :: !TeamOpts
     } deriving (Show, Generic)
 
 instance FromJSON EmailSMSOpts
 
 data ZAuthOpts = ZAuthOpts
-    { privateKeys  :: FilePath
-    , publicKeys   :: FilePath
-    , authSettings :: ZAuth.Settings
+    { privateKeys  :: !FilePath
+    , publicKeys   :: !FilePath
+    , authSettings :: !ZAuth.Settings
     } deriving (Show, Generic)
 
 instance FromJSON ZAuthOpts
 
 data TurnOpts = TurnOpts
-    { servers  :: FilePath
-    , secret   :: FilePath
-    , lifetime :: Word32
+    { servers  :: !FilePath
+    , secret   :: !FilePath
+    , lifetime :: !Word32
     } deriving (Show, Generic)
 
 instance FromJSON TurnOpts

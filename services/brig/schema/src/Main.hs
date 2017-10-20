@@ -41,11 +41,10 @@ import qualified V41
 import qualified V42
 import qualified V43
 
-
 main :: IO ()
 main = do
     let desc = "Brig Cassandra Schema Migrations"
-        defaultPath = "/etc/wire/brig/brig-schema.yaml"
+        defaultPath = "/etc/wire/brig/conf/brig-schema.yaml"
     o <- getOptions desc migrationOptsParser defaultPath
     l <- new $ setOutput StdOut . setFormat Nothing $ defSettings
     migrateSchema l o

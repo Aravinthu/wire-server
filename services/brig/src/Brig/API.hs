@@ -87,7 +87,7 @@ runServer o = do
   where
     rtree      = compile (sitemap o)
     endpoint   = brig o
-    server   e = defaultServer (unpack (host endpoint)) (port endpoint) (e^.applog) (e^.metrics)
+    server   e = defaultServer (unpack . host $ endpoint) (port endpoint) (e^.applog) (e^.metrics)
     pipeline e = measureRequests (e^.metrics) rtree
                . catchErrors (e^.applog) (e^.metrics)
                . GZip.gunzip . GZip.gzip GZip.def

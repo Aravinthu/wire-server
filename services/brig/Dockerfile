@@ -1,5 +1,5 @@
 # Requires docker >= 17.05 (requires support for multi-stage builds)
-# Requires to have created the wire-server-builder and wire-server-deps docker images (run `make` in this directory)
+# Requires to have created the wire-server-builder and wire-server-deps docker images
 
 #--- Builder stage ---
 FROM wire-server-builder:alpine as builder
