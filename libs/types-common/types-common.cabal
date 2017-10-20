@@ -41,6 +41,7 @@ library
           Data.Swagger
           Data.Text.Ascii
           Data.UUID.Tagged
+          Util.Options
 
     build-depends:
           attoparsec            >= 0.11

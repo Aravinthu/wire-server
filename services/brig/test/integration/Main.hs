@@ -7,12 +7,16 @@ import Bilge (newManager, host, port, Request)
 import Cassandra as Cql
 import Cassandra.Settings as Cql
 import Data.Aeson
+import Data.Maybe (fromMaybe)
+import Data.Monoid
 import Data.Text (unpack, pack)
 import Data.Word
 import Data.Yaml (decodeFileEither, ParseException)
 import GHC.Generics
 import Network.HTTP.Client.TLS (tlsManagerSettings)
 import OpenSSL (withOpenSSL)
+import Options.Applicative
+import System.Environment (getArgs)
 import System.Logger (Logger)
 import Test.Tasty
 
@@ -25,8 +29,6 @@ import qualified API.User.Auth         as UserAuth
 import qualified Data.ByteString.Char8 as B
 import qualified Brig.Options          as Opts
 import qualified System.Logger         as Logger
-
--- TODO: move to common lib
 
 data Endpoint = Endpoint
     { epHost :: String
@@ -80,8 +82,9 @@ runTests iConf bConf = do
 
 main :: IO ()
 main = withOpenSSL $ do
-  iConf <- decodeConfigFile "/etc/wire/brig/integration.yaml"
-  bConf <- decodeConfigFile "/etc/wire/brig/brig.yaml"
+  (iPath, bPath) <- parseConfigPaths
+  iConf <- decodeConfigFile iPath
+  bConf <- decodeConfigFile bPath
 
   runTests iConf bConf
 
@@ -94,3 +97,28 @@ initCassandra ep lg =
 
 mkRequest :: Endpoint -> Request -> Request
 mkRequest (Endpoint h p) = host (B.pack h) . port p
+
+parseConfigPaths :: IO (String, String)
+parseConfigPaths = do
+  args <- getArgs
+  let desc = header "Brig Integration tests" <> fullDesc
+      res = getParseResult $ execParserPure defaultPrefs (info (helper <*> pathParser) desc) args
+  pure $ fromMaybe (defaultIntPath, defaultBrigPath) res
+  where
+    defaultBrigPath = "/etc/wire/brig/brig.yaml"
+    defaultIntPath = "/etc/wire/brig/integration.yaml"
+    pathParser :: Parser (String, String)
+    pathParser = (,) <$>
+                 (strOption $
+                 long "integration-config-file"
+                 <> short 'c'
+                 <> help "Integration config to load"
+                 <> showDefault
+                 <> value defaultIntPath)
+                 <*>
+                 (strOption $
+                 long "brig-config-file"
+                 <> short 'c'
+                 <> help "Brig application config to load"
+                 <> showDefault
+                 <> value defaultBrigPath)

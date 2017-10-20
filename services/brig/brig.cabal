@@ -254,6 +254,7 @@ executable brig-schema
       , raw-strings-qq       >= 1.0
       , text
       , tinylog              >= 0.10
+      , types-common
       , yaml                 >= 0.8.22
 
 executable brig-index
