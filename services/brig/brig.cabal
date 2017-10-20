@@ -335,6 +335,7 @@ executable brig-integration
       , lifted-async          >= 0.7
       , mtl                   >= 2.1
       , network
+      , optparse-applicative  >= 0.11
       , options               >= 0.1
       , pem
       , random                >= 1.0
