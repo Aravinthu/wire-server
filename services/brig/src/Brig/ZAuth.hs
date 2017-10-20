@@ -65,7 +65,6 @@ import Control.Lens ((^.), makeLenses, over)
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Data.Aeson
-import Data.Aeson.Types
 import Data.Bits
 import Data.ByteString.Conversion.To
 import Data.Id
@@ -143,15 +142,13 @@ instance FromJSON AccessTokenTimeout
 instance FromJSON ProviderTokenTimeout
 
 instance FromJSON Settings where
-  parseJSON (Object v) =
+  parseJSON = withObject "ZAuth.Settings" $ \o ->
     Settings <$>
-    v .: "keyIndex" <*>
-    (UserTokenTimeout <$> v .: "userTokenTimeout") <*>
-    (SessionTokenTimeout <$> v .: "sessionTokenTimeout") <*>
-    (AccessTokenTimeout <$> v .: "accessTokenTimeout") <*>
-    (ProviderTokenTimeout <$> v .: "providerTokenTimeout")
-  parseJSON v =
-    typeMismatch "zauthSettings" v
+    o .: "keyIndex" <*>
+    (UserTokenTimeout <$> o .: "userTokenTimeout") <*>
+    (SessionTokenTimeout <$> o .: "sessionTokenTimeout") <*>
+    (AccessTokenTimeout <$> o .: "accessTokenTimeout") <*>
+    (ProviderTokenTimeout <$> o .: "providerTokenTimeout")
 
 makeLenses ''Settings
 makeLenses ''Env

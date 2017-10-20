@@ -55,7 +55,6 @@ import Network.HTTP.Types
 import Prelude hiding (head, length)
 
 import qualified Data.List.NonEmpty as N
-import qualified Data.Yaml          as Y
 
 -- * Types
 
@@ -65,11 +64,11 @@ data ApiEndpoint = Production | Sandbox
     deriving (Show)
 
 instance FromJSON ApiEndpoint where
-  parseJSON (Y.String s) = case toLower s of
-    "sandbox" -> pure Sandbox
-    "production" -> pure Production
-    other -> fail $ "Unsupported Nexmo environment: " ++ unpack other
-  parseJSON v = typeMismatch "Nexmo.ApiEndpoint" v
+    parseJSON = withText "NexmoApiEndpoint" $ \s ->
+        case toLower s of
+            "sandbox" -> pure Sandbox
+            "production" -> pure Production
+            other -> fail $ "Unsupported Nexmo environment: " ++ unpack other
 
 data Charset = GSM7 | GSM8 | UCS2 deriving (Eq, Show)
 

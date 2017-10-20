@@ -4,7 +4,6 @@
 module Brig.User.Auth.Cookie.Limit where
 
 import Data.Aeson
-import Data.Aeson.Types (typeMismatch)
 import Brig.Types.User.Auth
 import Data.Int
 import Data.List (sortBy)
@@ -15,7 +14,6 @@ import GHC.Generics
 
 import qualified Data.Vector       as Vector
 import qualified Statistics.Sample as Stats
-import qualified Data.Yaml         as Y
 
 --------------------------------------------------------------------------------
 -- Quantitive Limiting
@@ -64,11 +62,10 @@ newtype RetryAfter = RetryAfter
 
 instance FromJSON StdDev where
 instance FromJSON CookieThrottle where
-  parseJSON (Y.Object v) =
+  parseJSON = withObject "User.Auth.Cookie.Limit.CookieThrottle" $ \o ->
     StdDevThrottle <$>
-    v .: "stdDev" <*>
-    (RetryAfter <$> v .: "retryAfter")
-  parseJSON v = typeMismatch "User.Auth.Cookie.Limit.CookieThrottle" v
+    o .: "stdDev" <*>
+    (RetryAfter <$> o .: "retryAfter")
 
 -- | Check that the standard deviation of cookie creation dates is /higher/
 -- than the specified minimum. If the standard deviation is below the
